@@ -1,65 +1,80 @@
 import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import CoinGecko from 'coingecko-api'
 
-export default function Home() {
+const CoinGeckoClient = new CoinGecko();
+const priceFormat = x => new Intl.NumberFormat({ style: 'currency', currency: 'USD' }).format(x)
+const formatPercentage = num => `${new Number(num).toFixed(3)}%`;
+
+export default function Home(props) {
+  const {data} = props.result;
   return (
-    <div className={styles.container}>
+    <div>
+            <h1 class="display-4 text-center">קריפטו ישראל</h1>
+    <div className="d-flex  bg-dark">
+    <div className="container bg-dark table-responsive">
+    <div className='justify-self-center'>
       <Head>
-        <title>Create Next App</title>
+        <title>קריפטו ישראל</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+      <table className=" table table-fixed table-sm table-hover table-borderless table-dark">
+        <thead className="thead-dark">
+          <tr className="sticky">
+            <th className="sticky-top px-3" scope="col">דירוג</th>
+            <th className="sticky-top px-3" scope="col">סמל</th>
+            <th className="sticky-top px-3" scope="col">מטבע</th>
+            <th className="sticky-top px-3" scope="col">מחיר</th>
+            <th className="sticky-top px-3" scope="col">שווי שוק</th>
+            <th className="sticky-top px-3" scope="col">שינוי (24 שעות)</th>
+            <th className="sticky-top px-3" scope="col">שער יומי גבוה</th>
+            <th className="sticky-top px-3" scope="col">שער יומי נמוך</th>
+          </tr>
+        </thead>
+        <tbody >
+          {data.map(coin => (
+            <tr key={coin.id}>
+              <td className="font-weight-bold"> {coin.market_cap_rank}</td>
+              <td className="font-weight-bold">
+                <img src={coin.image}
+                  style={{width: 25, height: 25, marginLeft: 10}} />
+                {coin.symbol.toUpperCase()}
+              </td>
+              <td className='h4'>
+                <p className='badge d-flex align-content-center'>
+                {coin.name}
+                </p>
+                </td>
+              <td className="h4"> ${priceFormat(coin.current_price)} </td>
+              <td className="font-weight-bold"> ${priceFormat(coin.market_cap)} </td>
+              <td style={{direction: 'ltr',textAlign: 'right'}}>
+                <span className={coin.price_change_percentage_24h > 0 ? (
+                  'font-weight-bold p text-success'
+                ) : 'p text-danger' 
+                }>
+                  {formatPercentage(coin.price_change_percentage_24h)} 
+                </span> 
+              </td>
+              <td> ${priceFormat(coin.high_24h)}</td>
+              <td> ${priceFormat(coin.low_24h)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+  </div>
+  </div>
+  </div>
   )
+}
+export async function getServerSideProps(context){
+  
+  const params = {
+    order: CoinGecko.ORDER.MARKET_CAP_DESC
+  }
+  const result = await CoinGeckoClient.coins.markets({params})
+  return {
+    props: {
+      result
+    }
+  }
 }
